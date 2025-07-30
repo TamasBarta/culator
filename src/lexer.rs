@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     OpeningParenthesis,
     ClosingParenthesis,
@@ -24,36 +24,32 @@ pub fn lex(input: impl Into<String>) -> Result<Vec<Token>, ()> {
                 let mut number_buffer = String::from(number);
                 while let Some(char) = iterator.peek() {
                     // TODO reconsider supporting 0x000 and similar syntaxes
-                    if char.is_numeric() {
+                    if char.is_numeric() || *char == '.' {
                         number_buffer.push(*char);
+                        iterator.next();
                     } else {
-                        iterator
-                            .advance_by(number_buffer.len() - 1)
-                            .expect("Failed to advance iterator");
-                        tokens.push(Token::NumericLiteral(number_buffer));
                         break;
                     }
                 }
+                tokens.push(Token::NumericLiteral(number_buffer));
             }
             name if name.is_alphabetic() => {
                 let mut name_buffer = String::from(name);
                 while let Some(char) = iterator.peek() {
                     if char.is_alphanumeric() {
                         name_buffer.push(*char);
+                        iterator.next();
                     } else {
-                        iterator
-                            .advance_by(name_buffer.len() - 1)
-                            .expect("Failed to advance iterator");
-                        tokens.push(Token::Name(name_buffer));
                         break;
                     }
                 }
+                tokens.push(Token::Name(name_buffer));
             }
             whitespace if whitespace.is_whitespace() => {}
             '(' => tokens.push(Token::OpeningParenthesis),
             ')' => tokens.push(Token::ClosingParenthesis),
             ',' => tokens.push(Token::Comma),
-            '+' | '-' => tokens.push(Token::Symbol(char.to_owned())),
+            '+' | '-' | '*' | '/' | '^' => tokens.push(Token::Symbol(char.to_owned())),
             _ => return Err(()),
         }
         current = iterator.next();
