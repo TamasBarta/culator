@@ -1,6 +1,6 @@
-mod evaluator;
-mod lexer;
-mod parser;
+pub mod evaluator;
+pub mod lexer;
+pub mod parser;
 
 #[cfg(test)]
 mod tests {
